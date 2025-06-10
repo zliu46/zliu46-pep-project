@@ -21,7 +21,7 @@ public class MessageDao {
         return null;
     }
 
-    public ArrayList<Message> getMessageByUserId(int userId) {
+    public ArrayList<Message> getMessagesByUserId(int userId) {
         return new ArrayList<>();
     }
 
