@@ -25,5 +25,7 @@ public class MessageDao {
         return new ArrayList<>();
     }
 
-    
+    public Message deletMessageById(int id) {
+        return null;
+    }
 }
