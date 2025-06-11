@@ -1,6 +1,8 @@
 package Controller;
 
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,7 +34,7 @@ public class SocialMediaController {
         app.post("/register", this::registerHandler);
         app.post("/login", this::loginHandler);
         app.post("/messages", this::createMessageHandler);
-        
+        app.get("/messages", this::getAllMessagesHandler);
 
         return app;
     }
@@ -141,5 +143,26 @@ public class SocialMediaController {
         }
     }
 
+    private void getAllMessagesHandler (Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            List<Message> messages = new ArrayList<>();
+            String sql = "SELECT * FROM message";
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                messages.add(new Message(
+                    rs.getInt("message_id"),
+                    rs.getInt("posted_by"),
+                    rs.getString("message_text"),
+                    rs.getLong(
+                        "time_posted_epoch")
+                ));
+            }
+            ctx.json(messages);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500);
+        }
+    }
 
 }
