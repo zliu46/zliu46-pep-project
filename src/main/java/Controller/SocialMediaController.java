@@ -29,6 +29,8 @@ public class SocialMediaController {
         app.get("example-endpoint", this::exampleHandler);
 
         app.post("/register", this::registerHandler);
+        app.post("/login", this::loginHandler);
+    
         
 
         return app;
@@ -74,6 +76,30 @@ public class SocialMediaController {
         } catch (SQLException e) {
             e.printStackTrace();
             ctx.status(500).result("Database error");
+        }
+    }
+
+    private void loginHandler (Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            Account account = ctx.bodyAsClass(Account.class);
+            PreparedStatement ps = connection.prepareStatement("SELECT * FROM account WHERE username = ? AND password = ?");
+            ps.setString(1, account.getUsername());
+            ps.setString(2, account.getPassword());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Account found = new Account (
+                    rs.getInt("account_id"),
+                    rs.getString("username"),
+                    rs.getString("password")
+                );
+                ctx.json(found);
+            }
+            else {
+                ctx.status(401);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500);
         }
     }
 
