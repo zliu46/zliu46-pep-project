@@ -35,6 +35,7 @@ public class SocialMediaController {
         app.post("/login", this::loginHandler);
         app.post("/messages", this::createMessageHandler);
         app.get("/messages", this::getAllMessagesHandler);
+        app.get("/messages/{message_id}", this::getMessageByIdHandler);
 
         return app;
     }
@@ -159,6 +160,29 @@ public class SocialMediaController {
                 ));
             }
             ctx.json(messages);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500);
+        }
+    }
+
+    private void getMessageByIdHandler (Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            int id = Integer.parseInt(ctx.pathParam("message_id"));
+            PreparedStatement ps = connection.prepareStatement("SELECT * FROM message WHERE message_id = ?");
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Message msg = new Message (
+                    rs.getInt("message_id"),
+                    rs.getInt("posted_by"),
+                    rs.getString("message_text"),
+                    rs.getLong("time_posted_epoch")
+                );
+                ctx.json(msg);
+            } else {
+                ctx.result("");
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             ctx.status(500);
