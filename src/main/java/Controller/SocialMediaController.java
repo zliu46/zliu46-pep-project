@@ -41,6 +41,7 @@ public class SocialMediaController {
         app.get("/messages", this::getAllMessagesHandler);
         app.get("/messages/{message_id}", this::getMessageByIdHandler);
         app.delete("/messages/{message_id}", this::deleteMessageHandler);
+        app.patch("/messages/{message_id}", this::updateMessageHandler);
 
         return app;
     }
@@ -219,6 +220,33 @@ public class SocialMediaController {
                 ctx.json(deletedMessage);
             } else {
                 ctx.result("");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500);
+        }
+    }
+
+    private void updateMessageHandler(Context ctx) throws SQLException {
+        try(Connection connection = ConnectionUtil.getConnection()) {
+            int id = Integer.parseInt(ctx.pathParam("message_id"));
+            Message update = ctx.bodyAsClass(Message.class);
+            
+            if (update.getMessage_text() == null || update.getMessage_text().isBlank() || update.getMessage_text().length() > 255) {
+                ctx.status(400);
+                return;
+            }
+
+            PreparedStatement ps = connection.prepareStatement("UPDATE message SET message_text = ? WHERE message_id = ?");
+            ps.setString(1, update.getMessage_text());
+            ps.setInt(2, id);
+
+            int updated = ps.executeUpdate();
+
+            if (updated > 0) {
+                getMessageByIdHandler(ctx);
+            } else {
+                ctx.status(400);
             }
         } catch (SQLException e) {
             e.printStackTrace();
