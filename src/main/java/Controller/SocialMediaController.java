@@ -3,6 +3,10 @@ package Controller;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.h2.command.ddl.PrepareProcedure;
+import org.h2.util.IntArray;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,6 +40,7 @@ public class SocialMediaController {
         app.post("/messages", this::createMessageHandler);
         app.get("/messages", this::getAllMessagesHandler);
         app.get("/messages/{message_id}", this::getMessageByIdHandler);
+        app.delete("/messages/{message_id}", this::deleteMessageHandler);
 
         return app;
     }
@@ -180,6 +185,38 @@ public class SocialMediaController {
                     rs.getLong("time_posted_epoch")
                 );
                 ctx.json(msg);
+            } else {
+                ctx.result("");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500);
+        }
+    }
+
+    private void deleteMessageHandler(Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            int id = Integer.parseInt(ctx.pathParam("message_id"));
+            Message deletedMessage = null;
+
+            PreparedStatement ps = connection.prepareStatement("SELECT * FROM message WHERE message_id = ?");
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                deletedMessage = new Message(
+                    rs.getInt("message_id"),
+                    rs.getInt("posted_by"),
+                    rs.getString("message_text"),
+                    rs.getLong("time_posted_epoch")
+                );
+            }
+
+            PreparedStatement delete = connection.prepareStatement("DELETE FROM message WHERE message_id =?");
+            delete.setInt(1, id);
+            delete.executeUpdate();
+
+            if (deletedMessage != null) {
+                ctx.json(deletedMessage);
             } else {
                 ctx.result("");
             }
