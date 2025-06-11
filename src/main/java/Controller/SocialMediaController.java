@@ -10,6 +10,7 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 
 import Model.Account;
+import Model.Message;
 import Util.ConnectionUtil;
 
 /**
@@ -30,7 +31,7 @@ public class SocialMediaController {
 
         app.post("/register", this::registerHandler);
         app.post("/login", this::loginHandler);
-    
+        app.post("/messages", this::createMessageHandler);
         
 
         return app;
@@ -97,7 +98,44 @@ public class SocialMediaController {
             else {
                 ctx.status(401);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500);
+        }
+    }
+
+    private void createMessageHandler(Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            Message msg = ctx.bodyAsClass(Message.class);
+
+            if (msg.getMessage_text() == null || msg.getMessage_text().isBlank() || msg.getMessage_text().length() > 255) {
+                ctx.status(400);
+                return;
+            }
+
+            PreparedStatement checkUser = connection.prepareStatement("SELECT * FROM account WHERE account_id = ?");
+            checkUser.setInt(1, msg.getPosted_by());
+            if (!checkUser.executeQuery().next()) {
+                ctx.status(400);
+                return;
+            }
+
+            PreparedStatement insert = connection.prepareStatement("INSERT INTO message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            insert.setInt(1, msg.getPosted_by());
+            insert.setString(2, msg.getMessage_text());
+            insert.setLong(3, msg.getTime_posted_epoch());
+            insert.executeUpdate();
+
+            ResultSet keys = insert.getGeneratedKeys();
+
+            if(keys.next()) {
+                msg.setMessage_id(keys.getInt(1));
+                ctx.json(msg);
+            }
+            else {
+                ctx.status(400);
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
             ctx.status(500);
         }
