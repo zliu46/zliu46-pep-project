@@ -1,7 +1,16 @@
 package Controller;
 
+import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+
+import Model.Account;
+import Util.ConnectionUtil;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
@@ -16,7 +25,11 @@ public class SocialMediaController {
      */
     public Javalin startAPI() {
         Javalin app = Javalin.create();
+
         app.get("example-endpoint", this::exampleHandler);
+
+        app.post("/register", this::registerHandler);
+        
 
         return app;
     }
@@ -27,6 +40,41 @@ public class SocialMediaController {
      */
     private void exampleHandler(Context context) {
         context.json("sample text");
+    }
+
+    private void registerHandler(Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            Account account = ctx.bodyAsClass(Account.class);
+
+            if (account.getUsername() == null || account.getUsername().isBlank() || account.getPassword().length() < 4) {
+                ctx.status(400);
+                return;
+            }
+
+            PreparedStatement check = connection.prepareStatement("SELECT * FROM account WHERE username = ?");
+            check.setString(1, account.getUsername());
+            ResultSet rs = check.executeQuery();
+            if (rs.next()) {
+                ctx.status(400);
+                return;
+            }
+
+            PreparedStatement insert = connection.prepareStatement("INSERT INTO account (username, password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS);
+            insert.setString(1, account.getUsername());
+            insert.setString(2, account.getPassword());
+            insert.executeUpdate();
+            ResultSet keys = insert.getGeneratedKeys();
+            if (keys.next()) {
+                account.setAccount_id(keys.getInt(1));
+                ctx.json(account);
+            }
+            else {
+                ctx.status(400);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500).result("Database error");
+        }
     }
 
 
