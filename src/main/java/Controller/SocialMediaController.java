@@ -42,6 +42,7 @@ public class SocialMediaController {
         app.get("/messages/{message_id}", this::getMessageByIdHandler);
         app.delete("/messages/{message_id}", this::deleteMessageHandler);
         app.patch("/messages/{message_id}", this::updateMessageHandler);
+        app.get("/accounts/{account_id}/messages", this::getMessagesByUserHandler);
 
         return app;
     }
@@ -254,4 +255,29 @@ public class SocialMediaController {
         }
     }
 
+    private void getMessagesByUserHandler (Context ctx) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            int userId = Integer.parseInt(ctx.pathParam("account_id"));
+            PreparedStatement ps = connection.prepareStatement("SELECT * FROM message WHERE posted_by = ?");
+            ps.setInt(1, userId);
+
+            ResultSet rs = ps.executeQuery();
+
+            List<Message> messages = new ArrayList<>();
+            while (rs.next()) {
+                messages.add (new Message(
+                    rs.getInt("message_id"),
+                    rs.getInt("posted_by"),
+                    rs.getString("message_text"),
+                    rs.getLong("time_posted_epoch")
+
+                ));
+            }
+
+            ctx.json(messages);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ctx.status(500);
+        }
+    }
 }
