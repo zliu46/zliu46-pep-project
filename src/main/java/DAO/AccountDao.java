@@ -24,7 +24,23 @@ public class AccountDao {
         return null;
     }
 
-    public Account getAccountByUsernameAndPassword (String un, String pw) {
+    public Account getAccountByUsernameAndPassword (String un, String pw) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            String sql = "SELECT * FROM account WHERE username = ? AND passowrd = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, un);
+            ps.setString(2, pw);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Account (
+                    rs.getInt("account_id"),
+                    rs.getString("username"),
+                    rs.getString("password")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
