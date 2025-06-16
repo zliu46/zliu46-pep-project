@@ -58,7 +58,16 @@ public class AccountDao {
         return true;
     }
 
-    public boolean isUsernameTakenById (int id) {
+    public boolean isUsernameTakenById (int id) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            String sql = "SELECT * FROM account WHERE account_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 }
