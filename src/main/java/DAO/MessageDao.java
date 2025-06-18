@@ -28,7 +28,25 @@ public class MessageDao {
         return null;
     }
 
-    public ArrayList<Message> getAllMessages() {
+    public ArrayList<Message> getAllMessages() throws SQLException {
+        ArrayList<Message> messages = new ArrayList<>();
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            String sql = "SELECT * FROM message";
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                messages.add(
+                    new Message (
+                        rs.getInt("message_id"),
+                        rs.getInt("posted_by"),
+                        rs.getString("message_text"),
+                        rs.getLong("time_posted_epoch")
+                    )
+                );
+            } 
+        } catch (SQLException e) {
+                e.printStackTrace();
+            }
         return new ArrayList<>();
     }
 
