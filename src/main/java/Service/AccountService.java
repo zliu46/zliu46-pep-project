@@ -25,7 +25,7 @@ public class AccountService {
         return accountDao.insertAccount(account);
     }
 
-    public Account login(String un, String pw) {
-        return null;
+    public Account login(String un, String pw) throws SQLException {
+        return accountDao.getAccountByUsernameAndPassword(un, pw);
     }
 }
