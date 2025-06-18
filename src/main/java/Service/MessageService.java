@@ -24,15 +24,15 @@ public class MessageService {
         return messageDao.insertMessage(message);
     }
 
-    public List<Message> getAllMessages() {
+    public List<Message> getAllMessages() throws SQLException {
         return messageDao.getAllMessages();
     }
 
-    public Message getMessageById(int id) {
+    public Message getMessageById(int id) throws SQLException {
         return messageDao.getMessageById(id);
     }
     
-    public Message deletMessageById(int id) {
+    public Message deletMessageById(int id) throws SQLException {
         return messageDao.deletMessageById(id);
     }
 
@@ -40,7 +40,7 @@ public class MessageService {
         return null;
     }
 
-    public List<Message> getMessagesByUserId(int userId) {
+    public List<Message> getMessagesByUserId(int userId) throws SQLException {
         return messageDao.getMessagesByUserId(userId);
     }
 }
