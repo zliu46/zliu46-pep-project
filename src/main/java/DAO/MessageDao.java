@@ -47,7 +47,7 @@ public class MessageDao {
         } catch (SQLException e) {
                 e.printStackTrace();
             }
-        return null;
+        return messages;
     }
 
     public Message getMessageById(int id) throws SQLException{
