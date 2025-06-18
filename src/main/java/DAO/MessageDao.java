@@ -106,7 +106,20 @@ public class MessageDao {
         return messages;
     }
 
-    public Message deletMessageById(int id) {
-        return null;
+    public Message deletMessageById(int id) throws SQLException {
+        Message delete = getMessageById(id);
+        if (delete == null) {
+            return null;
+        }
+        
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            String sql = "DELETE FROM message WHERE message_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return delete;
     }
 }
