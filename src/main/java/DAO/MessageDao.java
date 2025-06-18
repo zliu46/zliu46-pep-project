@@ -69,7 +69,19 @@ public class MessageDao {
         return null;
     }
 
-    public Message updateMessage(int id, String newText) {
+    public Message updateMessage(int id, String newText) throws SQLException {
+        try (Connection connection = ConnectionUtil.getConnection()) {
+            String sql = "UPDATE message SET message_text = ? WHERE message_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, newText);
+            ps.setInt(2, id);
+            int updatedRows = ps.executeUpdate();
+            if (updatedRows > 0) {
+                return getMessageById(id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
