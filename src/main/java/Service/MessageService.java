@@ -36,8 +36,12 @@ public class MessageService {
         return messageDao.deletMessageById(id);
     }
 
-    public Message updatMessage(int id, String newMessage) {
-        return null;
+    public Message updatMessage(int id, String newMessage) throws SQLException {
+        if (newMessage == null || newMessage.isBlank() || newMessage.length() > 255) {
+            return null;
+        } 
+        
+        return messageDao.updateMessage(id, newMessage);
     }
 
     public List<Message> getMessagesByUserId(int userId) throws SQLException {
